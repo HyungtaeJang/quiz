@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>성경 퀴즈 앱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: #F3E5D8;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 2px solid #D4B499;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .submit-button {
+            background-color: #B4D8C4;
+        }
+        .next-button {
+            background-color: #9EC0D4;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container mx-auto p-6 rounded-3xl card max-w-2xl text-center">
+        <h1 class="text-4xl font-bold mb-6 text-[#A0522D]">2025 소년부 성경 퀴즈</h1>
+
+        <!-- 통계 정보 -->
+        <div class="mb-4 text-xl text-gray-700">
+            <span id="score-text">문제 수: 0, 정답률: 0%</span>
+        </div>
+        
+        <div id="quiz-container" class="space-y-6">
+            <div class="bg-[#F8F3EC] p-6 rounded-xl border-dashed border-2 border-[#D4B499]">
+                <p id="question-text" class="text-2xl text-gray-800 font-bold leading-relaxed mb-4">
+                    문제를 불러오는 중...
+                </p>
+                <input type="text" id="user-answer" placeholder="여기에 정답을 입력하세요" class="w-full mt-4 p-3 text-lg rounded-xl border-2 border-[#D4B499] focus:outline-none focus:ring-2 focus:ring-[#9EC0D4]">
+            </div>
+
+            <p id="result-message" class="text-xl font-bold mt-4"></p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="submit-btn" class="button submit-button text-white font-semibold py-3 px-6 rounded-full text-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#B4D8C4] focus:ring-opacity-50">
+                    정답 확인
+                </button>
+                <button id="next-btn" class="button next-button text-white font-semibold py-3 px-6 rounded-full text-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#9EC0D4] focus:ring-opacity-50">
+                    다음 문제
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questionText = document.getElementById('question-text');
+        const userAnswerInput = document.getElementById('user-answer');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resultMessage = document.getElementById('result-message');
+        const scoreText = document.getElementById('score-text');
+        
+        // 정답 판정을 위해 조사(은,는,이,가,을,를,의)를 제거하는 함수
+        function normalizeAnswer(answer) {
+            return answer.trim().replace(/\s/g, '').replace(/[은는이가을를의]/g, '').toLowerCase();
+        }
+
+        const quizData = [
+            { question: "하나님이 천지를 창조하실 때 첫째 날에 창조하신 것은 무엇일까요?", answer: "빛" },
+            { question: "아담과 하와가 선악과를 먹은 후 가장 먼저 한 행동은 무엇일까요?", answer: "무화과 잎으로 옷을 만들어 입음" },
+            { question: "하나님께서 노아에게 방주를 만들라고 하신 이유는 무엇일까요?", answer: "홍수로 세상을 심판하시기 위해" },
+            { question: "아브라함의 아들 중 약속의 자녀로 불린 아들은 누구일까요?", answer: "이삭" },
+            { question: "야곱이 형 에서를 피해 도망가던 중 꿈에서 본 것은 무엇이었나요?", answer: "하늘에 닿은 사닥다리" },
+            { question: "요셉이 형들에게 팔려간 나라는 어디일까요?", answer: "이집트" },
+            { question: "모세가 태어났을 때 어디에 숨겨져 있었나요?", answer: "갈대 상자" },
+            { question: "하나님께서 모세를 부르시고 만나실 때 어떤 모습으로 모세와 만나셨나요?", answer: "불타는 떨기나무" },
+            { question: "이스라엘 백성들을 풀어주지 않는 애굽을 향하여 하나님이 내리신 마지막 열 번째 재앙은 무엇이었나요?", answer: "장자의 죽음" },
+            { question: "하나님께서 홍해를 가르실 때 모세가 사용한 것은 무엇일까요?", answer: "지팡이" },
+            { question: "하나님이 광야에서 이스라엘 백성에게 주신 음식은 무엇일까요?", answer: "만나와 메추라기" },
+            { question: "하나님이 모세에게 십계명을 어디에서 받게 하셨나요?", answer: "시내산" },
+            { question: "광야에서 이스라엘 백성들을 위해 모세가 어떤 행동으로 물을 마시도록 했나요?", answer: "반석을 쳐서 물이 나오게 함" },
+            { question: "모세가 가나안 땅을 정탐하러 보낸 사람은 몇 명이었나요?", answer: "12명" },
+            { question: "정탐꾼으로 보낸 12명의 사람 중 하나님을 믿고 믿음의 보고를 한 사람 두 명은 누구일까요?", answer: "여호수아, 갈렙" },
+            { question: "모세가 죽은 후 이스라엘 백성을 이끈 지도자는 누구일까요?", answer: "여호수아" },
+            { question: "여리고 성은 어떻게 무너졌나요?", answer: "7일 동안 돌고, 마지막 날 소리 지르고 나팔 불 때" },
+            { question: "이스라엘의 첫 번째 사사는 누구였을까요?", answer: "옷니엘" },
+            { question: "삼손이 모태에서부터 구별되어졌음을 의미하여 하나님의 000이라 말하는데 여기서 000은 무엇인가요?", answer: "나실인" },
+            { question: "사무엘은 누구의 아들이었나요?", answer: "엘가나와 한나" },
+            { question: "다윗이 골리앗을 무찌른 도구는 무엇일까요?", answer: "물매와 돌" },
+            { question: "다윗이 왕이 되기 전 일하던 직업은 무엇이었나요?", answer: "목동 양치기" },
+            { question: "이스라엘의 첫 번째 왕은 누구일까요?", answer: "사울" },
+            { question: "지혜로운 왕으로 유명한 이스라엘의 세 번째 왕은 누구일까요?", answer: "솔로몬" },
+            { question: "솔로몬이 하나님께 가장 먼저 지은 건축물은 무엇이었나요?", answer: "성전" },
+            { question: "엘리야가 갈멜산에서 대결한 우상의 선지자는 누구의 선지자였나요?", answer: "바알" },
+            { question: "엘리야를 대신해 선지자가 된 사람은 누구일까요?", answer: "엘리사" },
+            { question: "하나님께서 요나에게 가라고 하신 도시는 어디였나요?", answer: "니느웨" },
+            { question: "요나는 어디로 도망가려 했나요?", answer: "다시스" },
+            { question: "다니엘과 세 친구가 바벨론 왕 앞에서 거절한 음식은 무엇이었나요?", answer: "왕의 진미와 포도주" },
+            { question: "불 가운데 던져졌으나 살아난 다니엘의 세 친구는 누구였나요?", answer: "사드락, 메삭, 아벳느고" },
+            { question: "다니엘이 사자 굴에 던져졌을 때, 사자의 입을 막으신 분은 누구일까요?", answer: "하나님" },
+            { question: "에스더가 왕비가 된 나라는 어디였나요?", answer: "페르시아" },
+            { question: "에스더의 삼촌 이름은 무엇일까요?", answer: "모르드개" },
+            { question: "욥은 어떤 시험을 당했나요?", answer: "재산, 자녀, 건강을 잃음" },
+            { question: "시편 대부분을 기록한 사람은 누구일까요?", answer: "다윗" },
+            { question: "시편 23편에서 다윗은 여호와를 어떻게 무엇이라고 설명하나요?", answer: "목자" },
+            { question: "잠언 대부분을 기록한 왕은 누구일까요?", answer: "솔로몬" },
+            { question: "전도서의 주제는 무엇일까요?", answer: "헛되고 헛되다" },
+            { question: "이사야 말씀에 여호와께서 이스라엘의 생존자를 남겨두지 않았더라면 어떤 나라처럼 멸망했을 것이라 말하고 있나요?", answer: "소돔과 고모라" },
+            { question: "예레미야는 어떤 선지자로 불리나요?", answer: "눈물의 선지자" },
+            { question: "에스겔이 본 환상 중 마른 뼈가 살아난 것은 무엇을 의미할까요?", answer: "이스라엘 회복" },
+            { question: "스가랴가 예언한 왕은 무엇을 타고 오셨나요?", answer: "나귀 새끼" },
+            { question: "미가 선지자가 예언한 메시아가 태어날 곳은 어디일까요?", answer: "베들레헴" },
+            { question: "요엘 선지자가 예언한 마지막 날에 하나님이 부어주시는 것은 무엇일까요?", answer: "성령" },
+            { question: "아모스는 원래 어떤 직업이었나요?", answer: "목자" },
+            { question: "호세아의 결혼 이야기는 무엇을 상징하나요?", answer: "하나님과 이스라엘의 관계" },
+            { question: "느헤미야가 다시 세운 것은 무엇일까요?", answer: "예루살렘 성벽" },
+            { question: "학개 선지자가 백성에게 건축하라고 한 것은 무엇이었나요?", answer: "성전" },
+            { question: "말라기는 구약 성경의 몇 번째 책일까요?", answer: "39번째 (마지막 책)" },
+            { question: "구약 성경은 총 몇 권일까요?", answer: "39권" },
+            { question: "신약 성경 전체는 몇 권일까요?", answer: "27권" },
+            { question: "신구약 성경 전체는 몇 권일까요?", answer: "66권" },
+            { question: "사랑장이라고 불리는 장은 어디일까요?", answer: "고린도전서 13장" },
+            { question: "성령의 열매는 몇 가지일까요?", answer: "9가지" },
+            { question: "믿음의 조상이라고 불리는 사람은 누구일까요?", answer: "아브라함" },
+            { question: "하나님의 전신갑주는 어디에 나와 있나요?", answer: "에베소서 6:10-18" },
+            { question: "나는 선한 목자라라고 말씀하신 분은 누구일까요?", answer: "예수님" },
+            { question: "예수님을 말씀이라고 소개하는 복음서는 무엇일까요?", answer: "요한복음" },
+            { question: "항상 기뻐하라 쉬지 말고 기도하라 범사에 감사하라가 나오는 곳은?", answer: "데살로니가전서 5:16-18" },
+            { question: "야고보서가 강조하는 것은 무엇일까요?", answer: "행함 있는 믿음" },
+            { question: "요한계시록에 나오는 일곱 교회 중 하나를 말해보세요.", answer: "에베소, 서머나, 버가모, 두아디라, 사데, 빌라델비아, 라오디게아 중 하나" },
+            { question: "요한계시록에서 새 하늘과 새 땅에 들어가는 사람들은 누구일까요?", answer: "어린 양의 생명책에 기록된 자들" },
+            { question: "요한계시록을 기록한 요한은 어느 섬에서 하나님께 계시를 받았나요?", answer: "밧모섬" }
+        ];
+
+        let currentQuestionIndex = 0;
+        let attemptedCount = 0;
+        let correctCount = 0;
+        let questionOrder = [];
+
+        // 배열을 무작위로 섞는 함수
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // 점수와 정답률을 업데이트하는 함수
+        function updateScore() {
+            const percentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
+            scoreText.textContent = `문제 수: ${attemptedCount}, 정답률: ${percentage}%`;
+        }
+        
+        // 다음 문제나 최종 결과를 표시하는 함수
+        function loadNextQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                // 모든 퀴즈가 끝났을 때
+                questionText.textContent = "모든 퀴즈를 풀었습니다! 수고하셨습니다!";
+                resultMessage.textContent = `최종 정답률은 ${Math.round((correctCount / attemptedCount) * 100)}% 입니다.`;
+                userAnswerInput.style.display = 'none';
+                submitBtn.style.display = 'none';
+                nextBtn.textContent = '퀴즈 다시 시작';
+                nextBtn.onclick = () => location.reload();
+            } else {
+                // 다음 문제 로드
+                const questionIndex = questionOrder[currentQuestionIndex];
+                const currentQuestion = quizData[questionIndex];
+                questionText.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+                userAnswerInput.value = "";
+                userAnswerInput.disabled = false;
+                submitBtn.disabled = false;
+                nextBtn.disabled = true;
+                resultMessage.textContent = "";
+                resultMessage.className = "text-xl font-bold mt-4";
+                userAnswerInput.focus();
+            }
+        }
+
+        // 사용자의 답을 정규화하여 비교하고 결과를 표시하는 함수
+        function checkAnswer() {
+            const currentQuestion = quizData[questionOrder[currentQuestionIndex]];
+            const userAnswer = normalizeAnswer(userAnswerInput.value);
+            const correctAnswer = normalizeAnswer(currentQuestion.answer);
+
+            attemptedCount++;
+            
+            if (userAnswer === correctAnswer) {
+                correctCount++;
+                resultMessage.textContent = "정답입니다! 🎉";
+                resultMessage.classList.remove("text-red-600");
+                resultMessage.classList.add("text-green-600");
+            } else {
+                resultMessage.textContent = `틀렸습니다. 정답은 "${currentQuestion.answer}" 입니다.`;
+                resultMessage.classList.remove("text-green-600");
+                resultMessage.classList.add("text-red-600");
+            }
+            updateScore();
+            
+            // 정답 판정 후 상태 변경
+            userAnswerInput.disabled = true;
+            submitBtn.disabled = true;
+            nextBtn.disabled = false;
+
+            currentQuestionIndex++;
+        }
+
+        // '정답 확인' 버튼 클릭 이벤트
+        submitBtn.addEventListener('click', checkAnswer);
+        
+        // '다음 문제' 버튼 클릭 이벤트
+        nextBtn.addEventListener('click', loadNextQuestion);
+        
+        // 입력창에서 엔터 키를 누르면 정답 확인
+        userAnswerInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                checkAnswer();
+            }
+        });
+
+        // 페이지 로드 시 퀴즈 초기화
+        window.onload = () => {
+            if (quizData && quizData.length > 0) {
+                // 문제 순서 배열 생성 및 섞기
+                for (let i = 0; i < quizData.length; i++) {
+                    questionOrder.push(i);
+                }
+                shuffle(questionOrder);
+                loadNextQuestion();
+            } else {
+                questionText.textContent = "퀴즈 데이터를 불러올 수 없습니다.";
+                submitBtn.disabled = true;
+                nextBtn.disabled = true;
+            }
+        };
+    </script>
+</body>
+</html>
