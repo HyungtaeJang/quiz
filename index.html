@@ -141,14 +141,14 @@
 
         // --- Firebase 설정 ---
         const firebaseConfig = {
-            apiKey: "AIzaSyCMKhgmBuciL9DyIAW3UGij18A-mWIPhbs",
-            authDomain: "biblequiz-f0cdb.firebaseapp.com",
-            projectId: "biblequiz-f0cdb",
-            storageBucket: "biblequiz-f0cdb.firebasestorage.app",
-            messagingSenderId: "384694975873",
-            appId: "1:384694975873:web:432e9d87139dd005c4bc80",
-            measurementId: "G-CX72P2RXQN"
-        };
+            apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+            authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+            projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+            storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+            messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+            appId: import.meta.env.VITE_FIREBASE_APP_ID,
+            measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+        };        
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
