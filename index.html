@@ -3,89 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>성경 퀴즈 앱</title>
+    <title>2025 성경 퀴즈</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
         body {
-            font-family: 'Jua', sans-serif;
-            background-color: #F3E5D8;
+            font-family: 'Pretendard', sans-serif;
+            background-color: #F8F7F2; /* Soft Ivory Background */
         }
+
+        /* 화면 전환 효과 */
+        .screen {
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+            width: 100%;
+        }
+        .screen.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            position: absolute;
+        }
+
         .card {
             background-color: #FFFFFF;
-            border: 2px solid #D4B499;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #EAEAEA;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
         }
+        
         .button {
-            transition: all 0.3s ease;
-            transform: translateY(0);
+            transition: all 0.2s ease-out;
         }
         .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         .button:active {
-            transform: translateY(0);
-            box-shadow: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
-        .submit-button {
-            background-color: #B4D8C4;
-        }
-        .next-button {
-            background-color: #9EC0D4;
-        }
+        
+        .btn-primary { background-color: #206A5D; color: white; } /* Deep Teal */
+        .btn-secondary { background-color: #81B29A; color: white; } /* Sage Green */
+        .btn-tertiary { background-color: #E0A96D; color: white; } /* Soft Gold */
+
         .button:disabled {
-            background-color: #ccc;
+            background-color: #BDBDBD;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
+
+        input[type="text"] {
+            border: 2px solid #EAEAEA;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #81B29A;
+            box-shadow: 0 0 0 3px rgba(129, 178, 154, 0.2);
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
-    <div class="container mx-auto p-6 rounded-3xl card max-w-2xl text-center">
-        <h1 class="text-4xl font-bold mb-6 text-[#A0522D]">2025 소년부 성경 퀴즈</h1>
-
-        <!-- 통계 정보 -->
-        <div class="mb-4 text-xl text-gray-700">
-            <span id="score-text">문제 수: 0, 정답률: 0%</span>
+    <div class="container mx-auto max-w-2xl text-center relative">
+        <div id="start-screen" class="screen card p-8 rounded-3xl space-y-6">
+            <h1 class="text-4xl font-bold mb-2 text-[#2C3E50]">2025 소년부 성경 퀴즈</h1>
+            <p class="text-lg text-gray-600">하나님의 말씀을 퀴즈로 재미있게 배워보아요!</p>
+            <div class="pt-4 space-y-4">
+                <button id="start-quiz-btn" class="button btn-primary font-semibold py-3 px-8 rounded-full text-lg w-full sm:w-auto shadow-md">
+                    퀴즈 시작하기
+                </button>
+                <button id="show-scoreboard-btn" class="button btn-secondary font-semibold py-3 px-8 rounded-full text-lg w-full sm:w-auto shadow-md">
+                    스코어보드 보기
+                </button>
+            </div>
         </div>
-        
-        <div id="quiz-container" class="space-y-6">
-            <div class="bg-[#F8F3EC] p-6 rounded-xl border-dashed border-2 border-[#D4B499]">
-                <p id="question-text" class="text-2xl text-gray-800 font-bold leading-relaxed mb-4">
+
+        <div id="name-input-screen" class="screen card p-8 rounded-3xl space-y-6 hidden">
+            <h2 class="text-3xl font-bold mb-4 text-[#2C3E50]">당신의 이름은 무엇인가요?</h2>
+            <p class="text-gray-600">스코어보드에 기록될 이름을 입력해주세요.</p>
+            <input type="text" id="username-input" placeholder="이름 입력" class="w-full mt-2 p-4 text-lg rounded-xl text-center">
+            <p id="name-error-message" class="text-red-500 font-semibold hidden h-6"></p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="start-btn" class="button btn-primary font-semibold py-3 px-8 rounded-full text-lg shadow-md">
+                    시작
+                </button>
+                <button id="back-from-name-btn" class="button btn-tertiary font-semibold py-3 px-8 rounded-full text-lg shadow-md">
+                    뒤로
+                </button>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen card p-8 rounded-3xl space-y-6 hidden">
+            <div class="mb-4 text-xl text-gray-700 font-semibold">
+                <span id="score-text">문제 1 | 정답 0개</span>
+            </div>
+            
+            <div class="bg-[#F8F7F2] p-6 rounded-xl min-h-[150px] flex items-center justify-center">
+                <p id="question-text" class="text-2xl text-gray-800 font-bold leading-relaxed">
                     문제를 불러오는 중...
                 </p>
-                <input type="text" id="user-answer" placeholder="여기에 정답을 입력하세요" class="w-full mt-4 p-3 text-lg rounded-xl border-2 border-[#D4B499] focus:outline-none focus:ring-2 focus:ring-[#9EC0D4]">
             </div>
 
-            <p id="result-message" class="text-xl font-bold mt-4"></p>
+            <input type="text" id="user-answer" placeholder="정답을 입력하세요" class="w-full p-4 text-lg rounded-xl text-center">
+            
+            <p id="result-message" class="text-xl font-bold mt-2 h-8"></p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <button id="submit-btn" class="button submit-button text-white font-semibold py-3 px-6 rounded-full text-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#B4D8C4] focus:ring-opacity-50">
+                <button id="submit-btn" class="button btn-secondary font-semibold py-3 px-6 rounded-full text-lg shadow-md">
                     정답 확인
                 </button>
-                <button id="next-btn" class="button next-button text-white font-semibold py-3 px-6 rounded-full text-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#9EC0D4] focus:ring-opacity-50">
+                <button id="next-btn" class="button btn-primary font-semibold py-3 px-6 rounded-full text-lg shadow-md">
                     다음 문제
                 </button>
+                <button id="home-from-quiz-btn" class="button btn-tertiary font-semibold py-3 px-6 rounded-full text-lg shadow-md">
+                    그만하기
+                </button>
             </div>
+        </div>
+
+        <div id="scoreboard-screen" class="screen card p-8 rounded-3xl hidden">
+            <h2 class="text-3xl font-bold mb-6 text-[#2C3E50]">🏆 명예의 전당 🏆</h2>
+            <div id="save-message" class="text-lg mb-4 h-8"></div>
+            <ul id="scoreboard-list" class="space-y-3 text-lg text-gray-800 max-h-96 overflow-y-auto pr-2">
+                </ul>
+            <button id="home-from-scoreboard-btn" class="button btn-tertiary text-white font-semibold py-3 px-8 rounded-full text-lg shadow-md mt-6">
+                홈으로
+            </button>
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase 설정 ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMKhgmBuciL9DyIAW3UGij18A-mWIPhbs",
+            authDomain: "biblequiz-f0cdb.firebaseapp.com",
+            projectId: "biblequiz-f0cdb",
+            storageBucket: "biblequiz-f0cdb.firebasestorage.app",
+            messagingSenderId: "384694975873",
+            appId: "1:384694975873:web:432e9d87139dd005c4bc80",
+            measurementId: "G-CX72P2RXQN"
+        };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // --- UI 요소 ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            nameInput: document.getElementById('name-input-screen'),
+            quiz: document.getElementById('quiz-screen'),
+            scoreboard: document.getElementById('scoreboard-screen'),
+        };
+
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const showScoreboardBtn = document.getElementById('show-scoreboard-btn');
+        const usernameInput = document.getElementById('username-input');
+        const startBtn = document.getElementById('start-btn');
+        const backFromNameBtn = document.getElementById('back-from-name-btn');
+        const nameErrorMessage = document.getElementById('name-error-message');
         const questionText = document.getElementById('question-text');
         const userAnswerInput = document.getElementById('user-answer');
         const submitBtn = document.getElementById('submit-btn');
         const nextBtn = document.getElementById('next-btn');
         const resultMessage = document.getElementById('result-message');
         const scoreText = document.getElementById('score-text');
-        
-        // 정답 판정을 위해 조사(은,는,이,가,을,를,의)를 제거하는 함수
-        function normalizeAnswer(answer) {
-            return answer.trim().replace(/\s/g, '').replace(/[은는이가을를의]/g, '').toLowerCase();
-        }
+        const homeFromQuizBtn = document.getElementById('home-from-quiz-btn');
+        const scoreboardList = document.getElementById('scoreboard-list');
+        const homeFromScoreboardBtn = document.getElementById('home-from-scoreboard-btn');
+        const saveMessage = document.getElementById('save-message');
 
+        // --- 퀴즈 데이터 ---
         const quizData = [
             { question: "하나님이 천지를 창조하실 때 첫째 날에 창조하신 것은 무엇일까요?", answer: "빛" },
             { question: "아담과 하와가 선악과를 먹은 후 가장 먼저 한 행동은 무엇일까요?", answer: "무화과 잎으로 옷을 만들어 입음" },
@@ -99,7 +191,7 @@
             { question: "하나님께서 홍해를 가르실 때 모세가 사용한 것은 무엇일까요?", answer: "지팡이" },
             { question: "하나님이 광야에서 이스라엘 백성에게 주신 음식은 무엇일까요?", answer: "만나와 메추라기" },
             { question: "하나님이 모세에게 십계명을 어디에서 받게 하셨나요?", answer: "시내산" },
-            { question: "광야에서 이스라엘 백성들을 위해 모세가 어떤 행동으로 물을 마시도록 했나요?", answer: "반석을 쳐서 물이 나오게 함" },
+            { question: "광야에서 이스라엘 백성들을 위해 모세가 어떤 행동으로 물을 마시도록 했나요?", answer: "모세가 반석을 쳐서 물이 나오게 함" },
             { question: "모세가 가나안 땅을 정탐하러 보낸 사람은 몇 명이었나요?", answer: "12명" },
             { question: "정탐꾼으로 보낸 12명의 사람 중 하나님을 믿고 믿음의 보고를 한 사람 두 명은 누구일까요?", answer: "여호수아, 갈렙" },
             { question: "모세가 죽은 후 이스라엘 백성을 이끈 지도자는 누구일까요?", answer: "여호수아" },
@@ -138,6 +230,42 @@
             { question: "학개 선지자가 백성에게 건축하라고 한 것은 무엇이었나요?", answer: "성전" },
             { question: "말라기는 구약 성경의 몇 번째 책일까요?", answer: "39번째 (마지막 책)" },
             { question: "구약 성경은 총 몇 권일까요?", answer: "39권" },
+            { question: "예수님의 어머니 이름은 무엇일까요?", answer: "마리아" },
+            { question: "예수님의 아버지로 불린 사람은 누구일까요?", answer: "요셉" },
+            { question: "예수님이 태어나신 곳은 어디일까요?", answer: "베들레헴" },
+            { question: "예수님이 자라신 마을은 어디일까요?", answer: "나사렛" },
+            { question: "예수님이 세례받으신 강은 어디일까요?", answer: "요단강" },
+            { question: "예수님께 세례를 준 사람은 누구일까요?", answer: "세례 요한" },
+            { question: "예수님이 광야에서 시험을 받으신 기간은 며칠일까요?", answer: "40일" },
+            { question: "예수님의 첫 번째 제자는 누구였을까요?", answer: "베드로와 안드레" },
+            { question: "예수님의 열두 제자 중 세리였던 사람은 누구일까요?", answer: "마태" },
+            { question: "예수님이 첫 번째로 행하신 기적은 무엇일까요?", answer: "가나 혼인잔치 물로 포도주 만듦" },
+            { question: "예수님이 죽은 나사로를 살리셨을 때, 나사로는 며칠 동안 무덤에 있었나요?", answer: "4일" },
+            { question: "예수님이 오병이어 기적을 행하셨을 때, 사용된 것은 무엇일까요?", answer: "보리떡 5개와 물고기 2마리" },
+            { question: "오병이어 기적으로 먹은 사람은 몇 명이었나요? (남자만 세었을 때)", answer: "5천 명" },
+            { question: "예수님이 폭풍을 잠잠하게 하신 곳은 어디일까요?", answer: "갈릴리 바다" },
+            { question: "예수님이 물 위를 걸으신 사건은 어디서 일어났나요?", answer: "갈릴리 바다" },
+            { question: "예수님이 제자들에게 가르쳐주신 기도는 무엇일까요?", answer: "주기도문" },
+            { question: "예수님이 설교하신 산상수훈의 기록된 복음서는 어디일까요?", answer: "마태복음" },
+            { question: "예수님이 변화산에서 함께 하신 제자 세 명은 누구였나요?", answer: "베드로, 야고보, 요한" },
+            { question: "예수님이 예루살렘에 입성하실 때 타신 것은 무엇일까요?", answer: "나귀 새끼" },
+            { question: "예수님이 마지막 만찬에서 떡과 잔이 의미하는 것은 무엇일까요?", answer: "예수님의 몸과 피" },
+            { question: "예수님을 세 번 부인한 제자는 누구일까요?", answer: "베드로" },
+            { question: "예수님을 은 삼십에 팔아넘긴 제자는 누구일까요?", answer: "가룟 유다" },
+            { question: "예수님이 십자가에 달리신 언덕 이름은 무엇일까요?", answer: "골고다" },
+            { question: "요한복음에서 예수님이 십자가에 못 박히실 때 하신 말씀 중 하나는 무엇일까요?", answer: "다 이루었다" },
+            { question: "예수님이 부활하신 날은 무슨 요일일까요?", answer: "주일 (안식 후 첫날)" },
+            { question: "예수님이 부활하신 후 몇일 동안 제자들과 함께 계셨나요?", answer: "40일" },
+            { question: "성령이 처음 강림한 날은 언제였나요?", answer: "오순절" },
+            { question: "오순절 성령 강림 후 제자들이 한 일은 무엇일까요?", answer: "방언으로 복음을 전함" },
+            { question: "사도행전에서 볼 수 있는 초대 교회의 첫 순교자는 누구일까요?", answer: "스데반" },
+            { question: "사울이 다메섹 도상에서 만난 분은 누구일까요?", answer: "예수님" },
+            { question: "사울의 이름이 바울로 바뀐 후 주로 전한 대상은 누구였나요?", answer: "이방인" },
+            { question: "바울과 함께 1차 선교여행을 간 동료는 누구일까요?", answer: "바나바" },
+            { question: "빌립이 전도한 에디오피아 내시는 무엇을 읽고 있었나요?", answer: "이사야서 말씀" },
+            { question: "바울과 실라가 감옥에서 한 일은 무엇이었나요?", answer: "찬송과 기도" },
+            { question: "바울이 편지를 가장 많이 보낸 교회는 어디였나요?", answer: "고린도 교회" },
+            { question: "바울이 마지막으로 간 도시는 어디였나요?", answer: "로마" },
             { question: "신약 성경 전체는 몇 권일까요?", answer: "27권" },
             { question: "신구약 성경 전체는 몇 권일까요?", answer: "66권" },
             { question: "사랑장이라고 불리는 장은 어디일까요?", answer: "고린도전서 13장" },
@@ -148,17 +276,56 @@
             { question: "예수님을 말씀이라고 소개하는 복음서는 무엇일까요?", answer: "요한복음" },
             { question: "항상 기뻐하라 쉬지 말고 기도하라 범사에 감사하라가 나오는 곳은?", answer: "데살로니가전서 5:16-18" },
             { question: "야고보서가 강조하는 것은 무엇일까요?", answer: "행함 있는 믿음" },
-            { question: "요한계시록에 나오는 일곱 교회 중 하나를 말해보세요.", answer: "에베소, 서머나, 버가모, 두아디라, 사데, 빌라델비아, 라오디게아 중 하나" },
+            { question: "요한계시록에 나오는 일곱 교회 중 하나를 말해보세요.", answer: "에베소, 서머나, 버가모, 두아디라, 사데, 빌라델비아, 라오디게아" },
             { question: "요한계시록에서 새 하늘과 새 땅에 들어가는 사람들은 누구일까요?", answer: "어린 양의 생명책에 기록된 자들" },
             { question: "요한계시록을 기록한 요한은 어느 섬에서 하나님께 계시를 받았나요?", answer: "밧모섬" }
         ];
 
+        // --- 전역 변수 및 상태 관리 ---
+        let db, auth;
+        let userId = 'anonymous';
+        let userName = '';
         let currentQuestionIndex = 0;
         let attemptedCount = 0;
         let correctCount = 0;
         let questionOrder = [];
+        let unsubscribeScoreboard = null;
 
-        // 배열을 무작위로 섞는 함수
+        // --- 함수 ---
+
+        // Firebase 초기화
+        const initializeFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+            } catch (e) {
+                console.error("Firebase 초기화 오류:", e);
+                alert("서비스에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+            }
+        };
+
+        // 화면 전환 함수
+        function switchScreen(hideKey, showKey) {
+            const hideEl = screens[hideKey];
+            const showEl = screens[showKey];
+
+            if (hideEl) {
+                hideEl.classList.add('hidden');
+            }
+            if (showEl) {
+                showEl.classList.remove('hidden');
+            }
+        }
+        
+        // 배열 무작위 섞기 (Fisher-Yates Shuffle)
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -166,94 +333,217 @@
             }
         }
         
-        // 점수와 정답률을 업데이트하는 함수
-        function updateScore() {
-            const percentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
-            scoreText.textContent = `문제 수: ${attemptedCount}, 정답률: ${percentage}%`;
-        }
-        
-        // 다음 문제나 최종 결과를 표시하는 함수
-        function loadNextQuestion() {
-            if (currentQuestionIndex >= quizData.length) {
-                // 모든 퀴즈가 끝났을 때
-                questionText.textContent = "모든 퀴즈를 풀었습니다! 수고하셨습니다!";
-                resultMessage.textContent = `최종 정답률은 ${Math.round((correctCount / attemptedCount) * 100)}% 입니다.`;
-                userAnswerInput.style.display = 'none';
-                submitBtn.style.display = 'none';
-                nextBtn.textContent = '퀴즈 다시 시작';
-                nextBtn.onclick = () => location.reload();
-            } else {
-                // 다음 문제 로드
-                const questionIndex = questionOrder[currentQuestionIndex];
-                const currentQuestion = quizData[questionIndex];
-                questionText.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
-                userAnswerInput.value = "";
-                userAnswerInput.disabled = false;
-                submitBtn.disabled = false;
-                nextBtn.disabled = true;
-                resultMessage.textContent = "";
-                resultMessage.className = "text-xl font-bold mt-4";
-                userAnswerInput.focus();
-            }
+        // 정답 문자열 정규화 (공백, 특수문자, 조사 제거)
+        function normalizeAnswer(answer) {
+            if (typeof answer !== 'string') return '';
+            return answer.replace(/\([^)]*\)/g, '')
+                         .replace(/[은는이가을를의\s,./]/g, '') // 공백, 쉼표, 슬래시 등도 제거
+                         .toLowerCase()
+                         .trim();
         }
 
-        // 사용자의 답을 정규화하여 비교하고 결과를 표시하는 함수
+        // 퀴즈 상태 초기화
+        function resetQuizState() {
+            currentQuestionIndex = 0;
+            attemptedCount = 0;
+            correctCount = 0;
+            questionOrder = [...Array(quizData.length).keys()];
+            shuffle(questionOrder);
+
+            updateScoreUI();
+            userAnswerInput.value = '';
+            userAnswerInput.disabled = false;
+            submitBtn.disabled = false;
+            nextBtn.disabled = true;
+            resultMessage.textContent = '';
+        }
+
+        // 점수 UI 업데이트
+        function updateScoreUI() {
+            scoreText.textContent = `문제 ${attemptedCount + 1} | 정답 ${correctCount}개`;
+        }
+        
+        // 다음 문제 로드 또는 퀴즈 종료
+        function loadNextQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                endQuiz();
+                return;
+            }
+            const questionIndex = questionOrder[currentQuestionIndex];
+            const currentQuestion = quizData[questionIndex];
+            questionText.textContent = currentQuestion.question;
+
+            userAnswerInput.value = "";
+            userAnswerInput.disabled = false;
+            submitBtn.disabled = false;
+            nextBtn.disabled = true;
+            resultMessage.textContent = "";
+            resultMessage.className = "text-xl font-bold mt-2 h-8"; // 클래스 초기화
+            updateScoreUI();
+            userAnswerInput.focus();
+        }
+
+        // 정답 확인 로직 (개선됨)
         function checkAnswer() {
+            if (submitBtn.disabled) return;
+
             const currentQuestion = quizData[questionOrder[currentQuestionIndex]];
-            const userAnswer = normalizeAnswer(userAnswerInput.value);
-            const correctAnswer = normalizeAnswer(currentQuestion.answer);
+            const userAnswer = userAnswerInput.value;
+            
+            // 정답을 배열로 변환 (쉼표, 슬래시, 공백 기준)
+            const correctAnswers = currentQuestion.answer.split(/[,/\s]+/).map(normalizeAnswer).filter(Boolean);
+            // 사용자 답을 배열로 변환
+            const userAnswers = userAnswer.split(/[,/\s]+/).map(normalizeAnswer).filter(Boolean);
+            
+            // 정렬 후 비교하여 순서에 상관없이 정답 처리
+            const isCorrect = correctAnswers.length === userAnswers.length && 
+                              correctAnswers.sort().every((val, i) => val === userAnswers.sort()[i]);
 
             attemptedCount++;
             
-            if (userAnswer === correctAnswer) {
+            if (isCorrect) {
                 correctCount++;
                 resultMessage.textContent = "정답입니다! 🎉";
-                resultMessage.classList.remove("text-red-600");
-                resultMessage.classList.add("text-green-600");
+                resultMessage.className = "text-xl font-bold mt-2 h-8 text-green-600";
             } else {
-                resultMessage.textContent = `틀렸습니다. 정답은 "${currentQuestion.answer}" 입니다.`;
-                resultMessage.classList.remove("text-green-600");
-                resultMessage.classList.add("text-red-600");
+                resultMessage.textContent = `아쉬워요! 정답: "${currentQuestion.answer}"`;
+                resultMessage.className = "text-xl font-bold mt-2 h-8 text-red-600";
             }
-            updateScore();
             
-            // 정답 판정 후 상태 변경
             userAnswerInput.disabled = true;
             submitBtn.disabled = true;
             nextBtn.disabled = false;
-
             currentQuestionIndex++;
+            updateScoreUI();
+        }
+        
+        // 퀴즈 종료 처리
+        async function endQuiz() {
+            switchScreen('quiz', 'scoreboard'); // ### FIX: 화면 전환 코드 추가
+            const saveStatus = await saveScore();
+            loadScoreboard(saveStatus);
         }
 
-        // '정답 확인' 버튼 클릭 이벤트
-        submitBtn.addEventListener('click', checkAnswer);
+        // 점수 저장
+        async function saveScore() {
+            if (!db || attemptedCount < 10) return "not_enough_questions";
+            
+            const scoreData = {
+                name: userName,
+                score: correctCount,
+                timestamp: new Date(),
+                questionsAnswered: attemptedCount,
+                userId: userId
+            };
+            
+            try {
+                const scoreCollectionRef = collection(db, "quiz_scores");
+                const userScoreRef = doc(scoreCollectionRef, userId);
+                await setDoc(userScoreRef, scoreData, { merge: true });
+                return "success";
+            } catch (e) {
+                console.error("점수 저장 실패:", e);
+                return "error";
+            }
+        }
+
+        // 스코어보드 로드
+        function loadScoreboard(status) {
+            switch(status) {
+                case "success":
+                    saveMessage.innerHTML = `🎉 <b>${correctCount}점</b>을 획득하여 점수를 등록했어요! 🎉`;
+                    saveMessage.className = "text-lg mb-4 h-8 text-green-600";
+                    break;
+                case "not_enough_questions":
+                    saveMessage.textContent = "퀴즈를 10문제 이상 풀어야 점수가 등록됩니다.";
+                    saveMessage.className = "text-lg mb-4 h-8 text-yellow-600";
+                    break;
+                case "error":
+                     saveMessage.textContent = "점수 등록에 실패했어요. 다시 시도해주세요.";
+                    saveMessage.className = "text-lg mb-4 h-8 text-red-600";
+                    break;
+                default:
+                    saveMessage.textContent = "";
+            }
+
+            if (!db) return;
+            
+            // 기존 리스너가 있다면 해제
+            if (unsubscribeScoreboard) unsubscribeScoreboard();
+
+            const scoreCollectionRef = collection(db, "quiz_scores");
+            unsubscribeScoreboard = onSnapshot(query(scoreCollectionRef), (snapshot) => {
+                const scores = snapshot.docs.map(doc => doc.data());
+                scores.sort((a, b) => b.score - a.score || a.timestamp - b.timestamp); // 점수 같으면 시간순
+
+                scoreboardList.innerHTML = '';
+                if (scores.length === 0) {
+                    scoreboardList.innerHTML = `<li class="text-gray-500">아직 등록된 점수가 없어요.</li>`;
+                } else {
+                    scores.forEach((score, index) => {
+                        const li = document.createElement('li');
+                        const isCurrentUser = score.userId === userId;
+                        li.className = `p-3 rounded-lg flex justify-between items-center ${isCurrentUser ? 'font-bold bg-yellow-100' : 'bg-gray-50'}`;
+                        li.innerHTML = `
+                            <span class="flex items-center">
+                                <span class="w-8 text-left">${index + 1}.</span>
+                                <span>${score.name}</span>
+                            </span>
+                            <span>${score.score}점 (${score.questionsAnswered}문제)</span>`;
+                        scoreboardList.appendChild(li);
+                    });
+                }
+            });
+        }
+
+        // --- 이벤트 리스너 ---
+
+        startQuizBtn.addEventListener('click', () => switchScreen('start', 'nameInput'));
+
+        showScoreboardBtn.addEventListener('click', () => {
+            switchScreen('start', 'scoreboard');
+            loadScoreboard();
+        });
         
-        // '다음 문제' 버튼 클릭 이벤트
-        nextBtn.addEventListener('click', loadNextQuestion);
-        
-        // 입력창에서 엔터 키를 누르면 정답 확인
-        userAnswerInput.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                checkAnswer();
+        startBtn.addEventListener('click', () => {
+            const name = usernameInput.value.trim();
+            if (name) {
+                userName = name;
+                switchScreen('nameInput', 'quiz');
+                resetQuizState();
+                loadNextQuestion();
+            } else {
+                nameErrorMessage.textContent = "이름을 꼭 입력해주세요!";
+                nameErrorMessage.classList.remove('hidden');
             }
         });
 
-        // 페이지 로드 시 퀴즈 초기화
-        window.onload = () => {
-            if (quizData && quizData.length > 0) {
-                // 문제 순서 배열 생성 및 섞기
-                for (let i = 0; i < quizData.length; i++) {
-                    questionOrder.push(i);
+        backFromNameBtn.addEventListener('click', () => switchScreen('nameInput', 'start'));
+
+        submitBtn.addEventListener('click', checkAnswer);
+        
+        nextBtn.addEventListener('click', loadNextQuestion);
+        
+        homeFromQuizBtn.addEventListener('click', endQuiz);
+        
+        homeFromScoreboardBtn.addEventListener('click', () => {
+            if (unsubscribeScoreboard) unsubscribeScoreboard(); // 리스너 정리
+            switchScreen('scoreboard', 'start');
+        });
+        
+        userAnswerInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (!submitBtn.disabled) {
+                    submitBtn.click();
+                } else if (!nextBtn.disabled) {
+                    nextBtn.click();
                 }
-                shuffle(questionOrder);
-                loadNextQuestion();
-            } else {
-                questionText.textContent = "퀴즈 데이터를 불러올 수 없습니다.";
-                submitBtn.disabled = true;
-                nextBtn.disabled = true;
             }
-        };
+        });
+
+        // 페이지 로드 시 Firebase 초기화
+        window.onload = initializeFirebase;
     </script>
 </body>
 </html>
